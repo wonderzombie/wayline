@@ -156,7 +156,14 @@ impl Wayline {
         let cmd = command::parse_command(&self.input);
 
         match cmd {
-            Command::Roll => self.on_roll_command(),
+            Command::RollTable => self.on_roll_command(),
+            Command::RollDice(dice_str) => {
+                if let Some(roll) = api::roll(&dice_str) {
+                    self.update_scrollback(format!("Rolled {}: {}", dice_str, roll).as_str());
+                } else {
+                    self.update_scrollback(format!("Invalid dice notation: {}", dice_str).as_str());
+                }
+            }
             Command::List => self.on_list_command(),
             Command::Time => self.on_time_command(),
             Command::Add(minutes) => self.add_minutes(minutes),

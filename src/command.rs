@@ -1,7 +1,8 @@
 
 #[derive(Debug, Clone)]
 pub enum Command {
-  Roll,
+  RollTable,
+  RollDice(String),
   List,
   Time,
   Add(u32), // in minutes
@@ -15,9 +16,15 @@ pub fn parse_command(input: &str) -> Command {
   }
 
   match parts[0].to_lowercase().as_str() {
-      "roll" => Command::Roll,
+      "roll" => Command::RollTable,
       "list" => Command::List,
       "time" => Command::Time,
+      "dice" => {
+        if parts.len() == 2 {
+          return Command::RollDice(parts[1].to_string());
+        }
+        Command::Unknown(input.to_string())
+      },
       "add" => {
           if parts.len() == 2 {
               if let Ok(minutes) = parts[1].parse::<u32>() {

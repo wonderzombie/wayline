@@ -1,5 +1,5 @@
-use rand;
 use crate::table;
+use rand;
 
 pub fn parse_table(toml_str: &str) -> Result<table::Table, toml::de::Error> {
     toml::from_str(toml_str)
