@@ -17,11 +17,40 @@ pub struct Wayline {
 
 #[derive(Debug, Clone)]
 pub enum Message {
+    Noop,
+    WindowOpened,
+    WindowClosed,
     EnterPressed,
     ContentChanged(String),
 }
 
 impl Wayline {
+    pub fn subscription(&self) -> iced::Subscription<Message> {
+        iced::window::events().map(|(_window, event)| match event {
+            iced::window::Event::Opened{ .. } => {
+                println!("Window opened");
+                Message::WindowOpened
+            }
+            iced::window::Event::Closed => {
+                Message::WindowClosed
+            }
+            _ => {
+                // Ignore other events
+                Message::Noop
+            }
+        })
+    }
+
+    pub fn read_config(&self, path: &str) -> Option<String> {
+        match std::fs::read_to_string(path) {
+            Ok(content) => Some(content),
+            Err(e) => {
+                eprintln!("Failed to read config file {}: {}", path, e);
+                None
+            }
+        }
+    }
+
     pub fn load(&mut self, toml_str: &str) {
         match api::parse_table(toml_str) {
             Ok(table) => {
@@ -67,6 +96,17 @@ impl Wayline {
             Message::ContentChanged(new_input) => {
                 self.input = new_input;
             }
+            Message::WindowOpened => {
+                self.update_scrollback("Wayline window opened.");
+                if let Some(config) = self.read_config("config.toml") {
+                    self.load(&config);
+                    self.update_scrollback("Loaded table from config.toml.");
+                    println!("Loaded table: {:?}", self.table);
+                } else {
+                    self.update_scrollback("No config.toml found.");
+                }
+            }
+            _ => { /* Ignore other messages */ }
         }
     }
 
@@ -104,6 +144,7 @@ impl Wayline {
 pub fn main() {
     iced::application("wayline", Wayline::update, Wayline::view)
         .theme(theme)
+        .subscription(Wayline::subscription)
         .run()
         .expect("unable to run application")
 }
