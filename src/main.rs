@@ -113,12 +113,33 @@ impl Wayline {
         // Handle the Enter key press event
         self.update_scrollback(format!("> {}", self.input).as_str());
 
-        if !self.input.starts_with("roll") {
-            self.update_scrollback("Unknown command. Use 'roll' to roll on the table.");
-            self.input.clear();
-            return;
+        if self.input.starts_with("roll") {
+            self.on_roll_command();
+        } else if self.input.starts_with("list") {
+            let lines = if let Some(table) = &self.table {
+                let mut lines: Vec<String> = vec![
+                    format!("Table: {}", table.name),
+                    format!("Dice: {}", table.dice),
+                ];
+                for entry in &table.rows {
+                    lines.push(format!("- {}: {:?}", entry.name, entry.numbers));
+                }
+                lines
+            } else {
+                vec!["No table loaded.".to_string()]
+            };
+
+            for line in lines {
+                self.update_scrollback(&line);
+            }
+        } else {
+            self.update_scrollback("Unknown command.");
         }
 
+        self.input.clear();
+    }
+
+    fn on_roll_command(&mut self) {
         if let Some(table) = &self.table {
             let dice = &table.dice;
             let (roll, result) = api::roll_on(table, dice);
@@ -130,8 +151,6 @@ impl Wayline {
         } else {
             self.update_scrollback("No table loaded.");
         }
-
-        self.input.clear();
     }
 
     fn update_scrollback(&mut self, new_line: &str) {
