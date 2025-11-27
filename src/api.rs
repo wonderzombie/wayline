@@ -25,15 +25,15 @@ pub fn roll(dice: &str) -> Option<u32> {
     Some(total_roll)
 }
 
-pub fn roll_on<'a>(table: &'a table::Table, dice: &str) -> Option<(u32, &'a table::Entry)> {
-    let total_roll = roll(dice)?;
+pub fn roll_on<'a>(table: &'a table::Table, dice: &str) -> (u32, Option<&'a table::Entry>) {
+    let total_roll = roll(dice).unwrap_or(0);
 
     // Find the corresponding entry in the table
     for entry in &table.rows {
         if entry.numbers.contains(&total_roll) {
-            return Some((total_roll, entry));
+            return (total_roll, Some(entry));
         }
     }
 
-    None
+    (total_roll, None)
 }

@@ -1,8 +1,9 @@
 mod api;
 mod table;
 
-use iced::{Element, color};
 use iced::widget::{column, text_editor, text_editor::Content, text_input};
+use iced::{Element, color};
+use tracing;
 
 #[derive(Debug, Default)]
 pub struct Wayline {
@@ -27,13 +28,11 @@ pub enum Message {
 impl Wayline {
     pub fn subscription(&self) -> iced::Subscription<Message> {
         iced::window::events().map(|(_window, event)| match event {
-            iced::window::Event::Opened{ .. } => {
+            iced::window::Event::Opened { .. } => {
                 println!("Window opened");
                 Message::WindowOpened
             }
-            iced::window::Event::Closed => {
-                Message::WindowClosed
-            }
+            iced::window::Event::Closed => Message::WindowClosed,
             _ => {
                 // Ignore other events
                 Message::Noop
@@ -101,7 +100,7 @@ impl Wayline {
                 if let Some(config) = self.read_config("config.toml") {
                     self.load(&config);
                     self.update_scrollback("Loaded table from config.toml.");
-                    println!("Loaded table: {:?}", self.table);
+                    tracing::info!("Loaded table: {:?}", self.table);
                 } else {
                     self.update_scrollback("No config.toml found.");
                 }
@@ -122,10 +121,11 @@ impl Wayline {
 
         if let Some(table) = &self.table {
             let dice = &table.dice;
-            if let Some((roll, entry)) = api::roll_on(table, dice) {
+            let (roll, result) = api::roll_on(table, dice);
+            if let Some(entry) = result {
                 self.update_scrollback(format!("Rolled: {} ({})", entry.name, roll).as_str());
             } else {
-                self.update_scrollback("No matching entry found.");
+                self.update_scrollback(format!("No matching entry found ({}).", roll).as_str());
             }
         } else {
             self.update_scrollback("No table loaded.");
@@ -139,7 +139,6 @@ impl Wayline {
         let new_content = self.scrollback.join("\n");
         self.content = Content::with_text(&new_content);
     }
-
 }
 
 pub fn main() {
