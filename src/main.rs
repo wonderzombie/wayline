@@ -1,12 +1,18 @@
+mod api;
+mod table;
+
 use iced::{Element, color};
 use iced::widget::{column, text_editor, text_editor::Content, text_input};
 
 #[derive(Debug, Default)]
 pub struct Wayline {
-    // Your fields here
+    // UI state
     scrollback: Vec<String>,
     input: String,
     content: Content,
+
+    // Table loaded from TOML
+    table: Option<table::Table>,
 }
 
 #[derive(Debug, Clone)]
@@ -16,6 +22,17 @@ pub enum Message {
 }
 
 impl Wayline {
+    pub fn load(&mut self, toml_str: &str) {
+        match api::parse_table(toml_str) {
+            Ok(table) => {
+                self.table = Some(table);
+            }
+            Err(e) => {
+                eprintln!("Failed to parse table: {}", e);
+            }
+        }
+    }
+
     pub fn view(&self) -> Element<'_, Message> {
         // Editor and input take up the full width and height of the window.
         // Output from the Wayline system will be displayed in the editor (scrollback) area.
@@ -55,9 +72,29 @@ impl Wayline {
 
     fn on_enter_pressed(&mut self) {
         // Handle the Enter key press event
-        let input = format!("> {}", self.input);
-        self.scrollback.push(input);
+        self.update_scrollback(format!("> {}", self.input).as_str());
+
+        if !self.input.starts_with("roll") {
+            self.update_scrollback("Unknown command. Use 'roll' to roll on the table.");
+            self.input.clear();
+            return;
+        }
+
+        if let Some(table) = &self.table {
+            if let Some(entry) = api::roll(table, "2d6") {
+                self.update_scrollback(format!("Rolled: {}", entry.name).as_str());
+            } else {
+                self.update_scrollback("No matching entry found.");
+            }
+        } else {
+            self.update_scrollback("No table loaded.");
+        }
+
         self.input.clear();
+    }
+
+    fn update_scrollback(&mut self, new_line: &str) {
+        self.scrollback.push(new_line.to_string());
         let new_content = self.scrollback.join("\n");
         self.content = Content::with_text(&new_content);
     }
