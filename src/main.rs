@@ -81,7 +81,7 @@ impl Wayline {
         }
 
         if let Some(table) = &self.table {
-            if let Some(entry) = api::roll(table, "2d6") {
+            if let Some(entry) = api::roll_on(table, "2d6") {
                 self.update_scrollback(format!("Rolled: {}", entry.name).as_str());
             } else {
                 self.update_scrollback("No matching entry found.");

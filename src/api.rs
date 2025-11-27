@@ -5,7 +5,7 @@ pub fn parse_table(toml_str: &str) -> Result<table::Table, toml::de::Error> {
     toml::from_str(toml_str)
 }
 
-pub fn roll<'a>(table: &'a table::Table, dice: &str) -> Option<&'a table::Entry> {
+pub fn roll(dice: &str) -> Option<u32> {
     // Simple parser for dice notation like "2d6"
     let parts: Vec<&str> = dice.split('d').collect();
     if parts.len() != 2 {
@@ -21,6 +21,12 @@ pub fn roll<'a>(table: &'a table::Table, dice: &str) -> Option<&'a table::Entry>
         let roll: u32 = rand::Rng::random_range(&mut rng, 1..=die_type);
         total_roll += roll;
     }
+
+    Some(total_roll)
+}
+
+pub fn roll_on<'a>(table: &'a table::Table, dice: &str) -> Option<&'a table::Entry> {
+    let total_roll = roll(dice)?;
 
     // Find the corresponding entry in the table
     for entry in &table.rows {
