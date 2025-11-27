@@ -121,8 +121,9 @@ impl Wayline {
         }
 
         if let Some(table) = &self.table {
-            if let Some(entry) = api::roll_on(table, "2d6") {
-                self.update_scrollback(format!("Rolled: {}", entry.name).as_str());
+            let dice = &table.dice;
+            if let Some((roll, entry)) = api::roll_on(table, dice) {
+                self.update_scrollback(format!("Rolled: {} ({})", entry.name, roll).as_str());
             } else {
                 self.update_scrollback("No matching entry found.");
             }

@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 pub struct Table {
   pub name: String,
   pub rows: Vec<Entry>,
-  pub roll: String, // e.g., "2d6",
+  pub dice: String, // e.g., "2d6",
 }
 
 #[derive(Debug, Serialize, Deserialize)]

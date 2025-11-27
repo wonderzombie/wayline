@@ -1,5 +1,5 @@
 name = "Wilderness Encounters"
-roll = "2d6"
+dice = "2d6"
 [[rows]]
 name = "Goblin Ambush"
 numbers = [2, 3]
