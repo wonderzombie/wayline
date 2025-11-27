@@ -33,16 +33,10 @@ pub enum Message {
 
 impl Wayline {
     pub fn subscription(&self) -> iced::Subscription<Message> {
-        iced::window::events().map(|(_window, event)| match event {
-            iced::window::Event::Opened { .. } => {
-                println!("Window opened");
-                Message::WindowOpened
-            }
+        iced::window::events().map(|(_, event)| match event {
+            iced::window::Event::Opened { .. } => Message::WindowOpened,
             iced::window::Event::Closed => Message::WindowClosed,
-            _ => {
-                // Ignore other events
-                Message::Noop
-            }
+            _ => Message::Noop,
         })
     }
 
