@@ -1,9 +1,12 @@
 mod api;
+mod command;
 mod table;
 
 use iced::widget::{column, text_editor, text_editor::Content, text_input};
 use iced::{Element, color};
 use tracing;
+
+use crate::command::Command;
 
 #[derive(Debug, Default)]
 pub struct Wayline {
@@ -112,59 +115,62 @@ impl Wayline {
         }
     }
 
+    fn on_list_command(&mut self) {
+        let lines = if let Some(table) = &self.table {
+            let mut lines: Vec<String> = vec![
+                format!("Table: {}", table.name),
+                format!("Dice: {}", table.dice),
+            ];
+            for entry in &table.rows {
+                lines.push(format!("- {}: {:?}", entry.name, entry.numbers));
+            }
+            lines
+        } else {
+            vec!["No table loaded.".to_string()]
+        };
+
+        for line in lines {
+            self.update_scrollback(&line);
+        }
+    }
+
+    fn on_time_command(&mut self) {
+        let hours = self.current_time_minutes / 60;
+        let minutes = self.current_time_minutes % 60;
+        self.update_scrollback(
+            format!("Current in-game time: {:02}:{:02}", hours, minutes).as_str(),
+        );
+    }
+
+    fn add_minutes(&mut self, minutes: u32) {
+        self.current_time_minutes += minutes;
+        self.update_scrollback(
+            format!(
+                "Added {} minutes. New time: {:02}:{:02}",
+                minutes,
+                self.current_time_minutes / 60,
+                self.current_time_minutes % 60
+            )
+            .as_str(),
+        );
+    }
+
     fn on_enter_pressed(&mut self) {
         // Handle the Enter key press event
         self.update_scrollback(format!("> {}", self.input).as_str());
 
-        if self.input.starts_with("roll") {
-            self.on_roll_command();
-        } else if self.input.starts_with("list") {
-            let lines = if let Some(table) = &self.table {
-                let mut lines: Vec<String> = vec![
-                    format!("Table: {}", table.name),
-                    format!("Dice: {}", table.dice),
-                ];
-                for entry in &table.rows {
-                    lines.push(format!("- {}: {:?}", entry.name, entry.numbers));
-                }
-                lines
-            } else {
-                vec!["No table loaded.".to_string()]
-            };
+        let cmd = command::parse_command(&self.input);
 
-            for line in lines {
-                self.update_scrollback(&line);
+        match cmd {
+            Command::Roll => self.on_roll_command(),
+            Command::List => self.on_list_command(),
+            Command::Time => self.on_time_command(),
+            Command::Add(minutes) => self.add_minutes(minutes),
+            Command::Unknown(cmd) => {
+                self.update_scrollback(format!("Unknown command: {}", cmd).as_str());
             }
-        } else if self.input.starts_with("time") {
-            let hours = self.current_time_minutes / 60;
-            let minutes = self.current_time_minutes % 60;
-            self.update_scrollback(
-                format!("Current in-game time: {:02}:{:02}", hours, minutes).as_str(),
-            );
-        } else if self.input.starts_with("add") {
-            let parts: Vec<&str> = self.input.split_whitespace().collect();
-            if parts.len() == 2 {
-                if let Ok(minutes) = parts[1].parse::<u32>() {
-                    self.current_time_minutes += minutes;
-                    self.update_scrollback(
-                        format!("Added {} minutes. New time: {:02}:{:02}",
-                            minutes,
-                            self.current_time_minutes / 60,
-                            self.current_time_minutes % 60
-                        ).as_str(),
-                    );
-                } else {
-                    self.update_scrollback("Invalid number of minutes.");
-                }
-            } else {
-                self.update_scrollback("Usage: add <minutes>");
-            }
-
-        } else {
-            self.update_scrollback("Unknown command.");
         }
-
-        self.input.clear();
+        self.input.clear()
     }
 
     fn on_roll_command(&mut self) {
