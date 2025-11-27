@@ -14,6 +14,9 @@ pub struct Wayline {
 
     // Table loaded from TOML
     table: Option<table::Table>,
+
+    // In-game time tracking
+    current_time_minutes: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -132,6 +135,31 @@ impl Wayline {
             for line in lines {
                 self.update_scrollback(&line);
             }
+        } else if self.input.starts_with("time") {
+            let hours = self.current_time_minutes / 60;
+            let minutes = self.current_time_minutes % 60;
+            self.update_scrollback(
+                format!("Current in-game time: {:02}:{:02}", hours, minutes).as_str(),
+            );
+        } else if self.input.starts_with("add") {
+            let parts: Vec<&str> = self.input.split_whitespace().collect();
+            if parts.len() == 2 {
+                if let Ok(minutes) = parts[1].parse::<u32>() {
+                    self.current_time_minutes += minutes;
+                    self.update_scrollback(
+                        format!("Added {} minutes. New time: {:02}:{:02}",
+                            minutes,
+                            self.current_time_minutes / 60,
+                            self.current_time_minutes % 60
+                        ).as_str(),
+                    );
+                } else {
+                    self.update_scrollback("Invalid number of minutes.");
+                }
+            } else {
+                self.update_scrollback("Usage: add <minutes>");
+            }
+
         } else {
             self.update_scrollback("Unknown command.");
         }
