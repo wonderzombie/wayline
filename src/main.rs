@@ -69,7 +69,7 @@ impl Wayline {
             // Scrollback
             text_editor(&self.content)
                 .padding(10)
-                .size(16)
+                .size(14)
                 .style(|theme, status| {
                     let mut style = iced::widget::text_editor::default(theme, status);
                     style.value = color!(0xEEEEEE);
@@ -79,7 +79,7 @@ impl Wayline {
             // Input area
             text_input("enter command", &self.input)
                 .padding(10)
-                .size(16)
+                .size(14)
                 .on_input(Message::ContentChanged)
                 .on_submit(Message::EnterPressed),
         ]
