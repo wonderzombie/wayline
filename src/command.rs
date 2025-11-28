@@ -6,6 +6,7 @@ pub enum Command {
   List,
   Time,
   Add(u32), // in minutes
+  Use(String),
   Help,
   Unknown(String),
 }
@@ -20,6 +21,12 @@ pub fn parse_command(input: &str) -> Command {
       "roll" => Command::RollTable,
       "list" => Command::List,
       "time" => Command::Time,
+      "use" => {
+          if parts.len() >= 2 {
+              return Command::Use(parts[1..].join(" "));
+          }
+          Command::Unknown(input.to_string())
+      }
       "dice" => {
         if parts.len() == 2 {
           return Command::RollDice(parts[1].to_string());

@@ -65,7 +65,7 @@ impl Wayline {
         match api::parse_tables(toml_str) {
             Ok(tables) => {
                 for table in tables {
-                    self.tables.insert(table.name.clone(), table);
+                    self.tables.insert(table.name.to_lowercase(), table);
                 }
             }
             Err(e) => {
@@ -210,8 +210,17 @@ impl Wayline {
             Command::Unknown(cmd) => {
                 self.update_scrollback(format!("Unknown command: {}", cmd));
             }
+            Command::Use(table_name) => {
+                if self.tables.contains_key(&table_name) {
+                    self.current_table = Some(table_name.clone());
+                    self.update_scrollback(format!("Switched to table '{}'.", table_name));
+                } else {
+                    self.update_scrollback(format!("Table '{}' not found.", table_name));
+                }
+            }
         }
-        self.input.clear()
+
+        self.input.clear();
     }
 
     fn on_roll_command(&mut self) {
