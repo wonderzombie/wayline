@@ -221,34 +221,40 @@ impl Wayline {
         self.input.clear();
     }
 
-    fn on_roll_command(&mut self, table_name_opt: Option<String>) {
-        let table_name = if let Some(name) = table_name_opt {
-            name
-        } else if let Some(current) = &self.current_table {
-            current.clone()
-        } else {
-            self.update_scrollback("No table specified and no current table set.");
+    fn on_roll_command(&mut self, target: Option<String>) {
+        let maybe_table = match target {
+            Some(ref name) => self.tables.get(name),
+            None => self.table(),
+        };
+
+        let Some(table) = maybe_table else {
+            if let Some(ref name) = target {
+                self.update_scrollback(format!("Table '{}' not found.", name));
+            } else {
+                self.update_scrollback("No table selected.");
+            }
             return;
         };
 
-        if let Some(t) = self.tables.get(&table_name) {
-            let dice = &t.dice;
-            let (roll, result) = api::roll_on(t, dice);
-            if let Some(entry) = result {
+        let table_name = table.name.to_lowercase();
+        let dice = table.dice.clone();
+
+        let (roll, result) = api::roll_on(table, &dice);
+
+        match result {
+            Some(entry) => {
                 self.update_scrollback(format!(
                     "{} -> ({}): rolled: {}",
                     table_name, roll, entry.name
                 ));
-            } else {
+            }
+            None => {
                 self.update_scrollback(format!(
                     "{} -> ({}): no matching entry found.",
                     table_name, roll
                 ));
             }
-        } else {
-            self.update_scrollback(format!("Table '{}' not found.", table_name));
-            return;
-        };
+        }
     }
 
     fn update_scrollback<S: Into<String>>(&mut self, new_line: S) {
@@ -256,6 +262,7 @@ impl Wayline {
         let new_content = self.scrollback.join("\n");
         self.content = Content::with_text(&new_content);
     }
+
 }
 
 pub fn main() {
