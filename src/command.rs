@@ -1,7 +1,7 @@
 
 #[derive(Debug, Clone)]
 pub enum Command {
-  RollTable,
+  RollTable(Option<String>),
   RollDice(String),
   List,
   Time,
@@ -18,7 +18,11 @@ pub fn parse_command(input: &str) -> Command {
   }
 
   match parts[0].to_lowercase().as_str() {
-      "roll" => Command::RollTable,
+      "roll" => Command::RollTable(if parts.len() >= 2 {
+          Some(parts[1..].join(" "))
+      } else {
+          None
+      }),
       "list" => Command::List,
       "time" => Command::Time,
       "use" => {

@@ -185,7 +185,7 @@ impl Wayline {
         let cmd = command::parse_command(&self.input);
 
         match cmd {
-            Command::RollTable => self.on_roll_command(),
+            Command::RollTable(table_name_opt) => self.on_roll_command(table_name_opt),
             Command::RollDice(dice_str) => {
                 if let Some(roll) = api::roll(&dice_str) {
                     self.update_scrollback(format!("Rolled {}: {}", dice_str, roll));
@@ -221,18 +221,28 @@ impl Wayline {
         self.input.clear();
     }
 
-    fn on_roll_command(&mut self) {
-        if let Some(table) = self.table() {
-            let dice = &table.dice;
-            let (roll, result) = api::roll_on(table, dice);
+    fn on_roll_command(&mut self, table_name_opt: Option<String>) {
+        let table_name = if let Some(name) = table_name_opt {
+            name
+        } else if let Some(current) = &self.current_table {
+            current.clone()
+        } else {
+            self.update_scrollback("No table specified and no current table set.");
+            return;
+        };
+
+        if let Some(t) = self.tables.get(&table_name) {
+            let dice = &t.dice;
+            let (roll, result) = api::roll_on(t, dice);
             if let Some(entry) = result {
-                self.update_scrollback(format!("Rolled: {} ({})", entry.name, roll));
+                self.update_scrollback(format!("{} -> ({}): rolled: {}", table_name, roll, entry.name));
             } else {
-                self.update_scrollback(format!("No matching entry found ({}).", roll));
+                self.update_scrollback(format!("{} -> ({}): no matching entry found.", table_name, roll));
             }
         } else {
-            self.update_scrollback("No table loaded.");
-        }
+            self.update_scrollback(format!("Table '{}' not found.", table_name));
+            return;
+        };
     }
 
     fn update_scrollback<S: Into<String>>(&mut self, new_line: S) {
