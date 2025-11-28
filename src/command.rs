@@ -1,4 +1,4 @@
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Command {
     RollTable(Option<String>),
     RollDice(String),
@@ -50,5 +50,22 @@ pub fn parse_command(input: &str) -> Command {
         }
         "help" => Command::Help,
         _ => Command::Unknown(input.to_string()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_parse_command() {
+        assert_eq!(parse_command("roll"), Command::RollTable(None));
+        assert_eq!(parse_command("roll monsters"), Command::RollTable(Some("monsters".to_string())));
+        assert_eq!(parse_command("list"), Command::List);
+        assert_eq!(parse_command("time"), Command::Time);
+        assert_eq!(parse_command("use treasures"), Command::Use("treasures".to_string()));
+        assert_eq!(parse_command("dice 2d6"), Command::RollDice("2d6".to_string()));
+        assert_eq!(parse_command("add 15"), Command::Add(15));
+        assert_eq!(parse_command("help"), Command::Help);
+        assert_eq!(parse_command("unknown command"), Command::Unknown("unknown command".to_string()));
     }
 }
