@@ -124,7 +124,7 @@ impl Wayline {
         };
 
         for line in lines {
-            self.update_scrollback(&line);
+            self.update_scrollback(line);
         }
     }
 
@@ -132,7 +132,7 @@ impl Wayline {
         let hours = self.current_time_minutes / 60;
         let minutes = self.current_time_minutes % 60;
         self.update_scrollback(
-            format!("Current in-game time: {:02}:{:02}", hours, minutes).as_str(),
+            format!("Current in-game time: {:02}:{:02}", hours, minutes),
         );
     }
 
@@ -144,14 +144,13 @@ impl Wayline {
                 minutes,
                 self.current_time_minutes / 60,
                 self.current_time_minutes % 60
-            )
-            .as_str(),
+            ),
         );
     }
 
     fn on_enter_pressed(&mut self) {
         // Handle the Enter key press event
-        self.update_scrollback(format!("> {}", self.input).as_str());
+        self.update_scrollback(format!("> {}", self.input));
 
         let cmd = command::parse_command(&self.input);
 
@@ -159,9 +158,9 @@ impl Wayline {
             Command::RollTable => self.on_roll_command(),
             Command::RollDice(dice_str) => {
                 if let Some(roll) = api::roll(&dice_str) {
-                    self.update_scrollback(format!("Rolled {}: {}", dice_str, roll).as_str());
+                    self.update_scrollback(format!("Rolled {}: {}", dice_str, roll));
                 } else {
-                    self.update_scrollback(format!("Invalid dice notation: {}", dice_str).as_str());
+                    self.update_scrollback(format!("Invalid dice notation: {}", dice_str));
                 }
             }
             Command::List => self.on_list_command(),
@@ -177,7 +176,7 @@ impl Wayline {
                 self.update_scrollback("- help : Show this help message");
             }
             Command::Unknown(cmd) => {
-                self.update_scrollback(format!("Unknown command: {}", cmd).as_str());
+                self.update_scrollback(format!("Unknown command: {}", cmd));
             }
         }
         self.input.clear()
@@ -188,17 +187,17 @@ impl Wayline {
             let dice = &table.dice;
             let (roll, result) = api::roll_on(table, dice);
             if let Some(entry) = result {
-                self.update_scrollback(format!("Rolled: {} ({})", entry.name, roll).as_str());
+                self.update_scrollback(format!("Rolled: {} ({})", entry.name, roll));
             } else {
-                self.update_scrollback(format!("No matching entry found ({}).", roll).as_str());
+                self.update_scrollback(format!("No matching entry found ({}).", roll));
             }
         } else {
             self.update_scrollback("No table loaded.");
         }
     }
 
-    fn update_scrollback(&mut self, new_line: &str) {
-        self.scrollback.push(new_line.to_string());
+    fn update_scrollback<S: Into<String>>(&mut self, new_line: S) {
+        self.scrollback.push(new_line.into());
         let new_content = self.scrollback.join("\n");
         self.content = Content::with_text(&new_content);
     }
