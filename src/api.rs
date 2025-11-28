@@ -5,6 +5,11 @@ pub fn parse_table(toml_str: &str) -> Result<table::Table, toml::de::Error> {
     toml::from_str(toml_str)
 }
 
+pub fn parse_tables(toml_str: &str) -> Result<Vec<table::Table>, toml::de::Error> {
+  let list: table::TableList = toml::from_str(toml_str)?;
+  Ok(list.table)
+}
+
 pub fn roll(dice: &str) -> Option<u32> {
     // Simple parser for dice notation like "2d6"
     let parts: Vec<&str> = dice.split('d').collect();

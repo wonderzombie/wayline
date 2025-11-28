@@ -1,3 +1,4 @@
+
 use serde::{Deserialize, Serialize};
 
 // We want to have tables that can be serialized/deserialized to/from TOML.
@@ -8,16 +9,16 @@ use serde::{Deserialize, Serialize};
 //
 // Example TOML representation:
 // ```toml
-// [table]
+// [[table]]
 // name = "Wilderness Encounters"
 // roll = "2d6"
-// [[rows]]
+// [[table.rows]]
 // name = "Goblin Ambush"
 // result = [2, 3]
-// [[rows]]
+// [[table.rows]]
 // name = "Bandit Raid"
 // result = [4, 5]
-// [[rows]]
+// [[table.rows]]
 // name = "Dragon Sighting"
 // result = [12, 12]
 // ```
@@ -34,4 +35,9 @@ pub struct Table {
 pub struct Entry {
   pub name: String,
   pub numbers: Vec<u32>, // Die results that correspond to this entry
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TableList {
+  pub table: Vec<Table>,
 }

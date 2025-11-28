@@ -2,9 +2,11 @@ mod api;
 mod command;
 mod table;
 
+use std::collections::HashMap;
+
 use iced::widget::{column, text_editor, text_editor::Content, text_input};
 use iced::{Element, color};
-use tracing;
+use tracing::{self, debug, error, info};
 
 use crate::command::Command;
 
@@ -16,7 +18,8 @@ pub struct Wayline {
     content: Content,
 
     // Table loaded from TOML
-    table: Option<table::Table>,
+    current_table: Option<String>,
+    tables: HashMap<String, table::Table>,
 
     // In-game time tracking
     current_time_minutes: u32,
@@ -40,23 +43,33 @@ impl Wayline {
         })
     }
 
+    pub fn table(&self) -> Option<&table::Table> {
+        if let Some(current_table) = &self.current_table {
+            self.tables.get(current_table)
+        } else {
+            None
+        }
+    }
+
     pub fn read_config(&self, path: &str) -> Option<String> {
         match std::fs::read_to_string(path) {
             Ok(content) => Some(content),
             Err(e) => {
-                eprintln!("Failed to read config file {}: {}", path, e);
+                error!("Failed to read config file {}: {}", path, e);
                 None
             }
         }
     }
 
-    pub fn load(&mut self, toml_str: &str) {
-        match api::parse_table(toml_str) {
-            Ok(table) => {
-                self.table = Some(table);
+    pub fn load_all(&mut self, toml_str: &str) {
+        match api::parse_tables(toml_str) {
+            Ok(tables) => {
+                for table in tables {
+                    self.tables.insert(table.name.clone(), table);
+                }
             }
             Err(e) => {
-                eprintln!("Failed to parse table: {}", e);
+                error!("Failed to parse tables: {}", e);
             }
         }
     }
@@ -97,20 +110,37 @@ impl Wayline {
             }
             Message::WindowOpened => {
                 self.update_scrollback("Wayline window opened.");
-                if let Some(config) = self.read_config("config.toml") {
-                    self.load(&config);
-                    self.update_scrollback("Loaded table from config.toml.");
-                    tracing::info!("Loaded table: {:?}", self.table);
+                if let Some(config) = self.read_config("tables.toml") {
+                    self.load_all(&config);
+                    self.update_scrollback(format!(
+                        "Loaded tables from tables.toml: {:?}.",
+                        self.tables.keys()
+                    ));
+                    if let Some(first_table_name) = self.tables.keys().next() {
+                        self.current_table = Some(first_table_name.clone());
+                        self.update_scrollback(format!(
+                            "Current table set to '{}'.",
+                            first_table_name
+                        ));
+                    }
                 } else {
-                    self.update_scrollback("No config.toml found.");
+                    self.update_scrollback("No tables.toml found.");
                 }
             }
             _ => { /* Ignore other messages */ }
         }
     }
 
+    /// If no table is loaded, do nothing.
+    /// If multiple tables are loaded but none is selected, list table names.
+    /// If one table is selected, list its entries.
     fn on_list_command(&mut self) {
-        let lines = if let Some(table) = &self.table {
+        if self.tables.is_empty() {
+            self.update_scrollback("No tables loaded.");
+            return;
+        }
+
+        if let Some(table) = self.table() {
             let mut lines: Vec<String> = vec![
                 format!("Table: {}", table.name),
                 format!("Dice: {}", table.dice),
@@ -118,34 +148,36 @@ impl Wayline {
             for entry in &table.rows {
                 lines.push(format!("- {}: {:?}", entry.name, entry.numbers));
             }
-            lines
+            for line in lines {
+                self.update_scrollback(line);
+            }
         } else {
-            vec!["No table loaded.".to_string()]
-        };
-
-        for line in lines {
-            self.update_scrollback(line);
+            self.update_scrollback("Loaded tables:");
+            let lines: Vec<String> = self
+                .tables
+                .keys()
+                .map(|name| format!("- {}", name))
+                .collect();
+            for line in lines {
+                self.update_scrollback(line);
+            }
         }
     }
 
     fn on_time_command(&mut self) {
         let hours = self.current_time_minutes / 60;
         let minutes = self.current_time_minutes % 60;
-        self.update_scrollback(
-            format!("Current in-game time: {:02}:{:02}", hours, minutes),
-        );
+        self.update_scrollback(format!("Current in-game time: {:02}:{:02}", hours, minutes));
     }
 
     fn add_minutes(&mut self, minutes: u32) {
         self.current_time_minutes += minutes;
-        self.update_scrollback(
-            format!(
-                "Added {} minutes. New time: {:02}:{:02}",
-                minutes,
-                self.current_time_minutes / 60,
-                self.current_time_minutes % 60
-            ),
-        );
+        self.update_scrollback(format!(
+            "Added {} minutes. New time: {:02}:{:02}",
+            minutes,
+            self.current_time_minutes / 60,
+            self.current_time_minutes % 60
+        ));
     }
 
     fn on_enter_pressed(&mut self) {
@@ -183,7 +215,7 @@ impl Wayline {
     }
 
     fn on_roll_command(&mut self) {
-        if let Some(table) = &self.table {
+        if let Some(table) = self.table() {
             let dice = &table.dice;
             let (roll, result) = api::roll_on(table, dice);
             if let Some(entry) = result {
