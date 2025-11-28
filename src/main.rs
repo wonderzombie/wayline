@@ -167,6 +167,15 @@ impl Wayline {
             Command::List => self.on_list_command(),
             Command::Time => self.on_time_command(),
             Command::Add(minutes) => self.add_minutes(minutes),
+            Command::Help => {
+                self.update_scrollback("Available commands:");
+                self.update_scrollback("- roll : Roll on the loaded table");
+                self.update_scrollback("- dice <notation> : Roll custom dice (e.g., '2d6')");
+                self.update_scrollback("- list : List the loaded table entries");
+                self.update_scrollback("- time : Show current in-game time");
+                self.update_scrollback("- add <minutes> : Add minutes to in-game time");
+                self.update_scrollback("- help : Show this help message");
+            }
             Command::Unknown(cmd) => {
                 self.update_scrollback(format!("Unknown command: {}", cmd).as_str());
             }

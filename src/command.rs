@@ -6,6 +6,7 @@ pub enum Command {
   List,
   Time,
   Add(u32), // in minutes
+  Help,
   Unknown(String),
 }
 
@@ -33,6 +34,7 @@ pub fn parse_command(input: &str) -> Command {
           }
           Command::Unknown(input.to_string())
       }
+      "help" => Command::Help,
       _ => Command::Unknown(input.to_string()),
   }
 }
