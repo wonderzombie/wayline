@@ -38,3 +38,40 @@ pub fn roll_on<'a>(table: &'a table::Table, dice: &str) -> (u32, Option<&'a tabl
 
     (total_roll, None)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_roll() {
+        let result = roll("2d6");
+        assert!(result.is_some());
+        let roll_value = result.unwrap();
+        assert!(roll_value >= 2 && roll_value <= 12);
+    }
+    #[test]
+    fn test_roll_on() {
+        let table = table::Table {
+            name: "Test Table".to_string(),
+            dice: "1d6".to_string(),
+            rows: vec![
+                table::Entry {
+                    name: "Result A".to_string(),
+                    numbers: vec![1, 2],
+                },
+                table::Entry {
+                    name: "Result B".to_string(),
+                    numbers: vec![3, 4],
+                },
+                table::Entry {
+                    name: "Result C".to_string(),
+                    numbers: vec![5, 6],
+                },
+            ],
+        };
+        let (roll_value, entry) = roll_on(&table, "1d6");
+        assert!(roll_value >= 1 && roll_value <= 6);
+        assert!(entry.is_some());
+    }
+}
