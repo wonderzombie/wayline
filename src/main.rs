@@ -77,7 +77,6 @@ impl Wayline {
     pub fn view(&self) -> Element<'_, Message> {
         // Editor and input take up the full width and height of the window.
         // Output from the Wayline system will be displayed in the editor (scrollback) area.
-
         column![
             // Scrollback
             text_editor(&self.content)
@@ -181,7 +180,6 @@ impl Wayline {
     }
 
     fn on_enter_pressed(&mut self) {
-        // Handle the Enter key press event
         self.update_scrollback(format!("> {}", self.input));
 
         let cmd = command::parse_command(&self.input);
