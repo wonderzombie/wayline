@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 use iced::widget::{column, text_editor, text_editor::Content, text_input};
 use iced::{Element, color};
-use tracing::{self, debug, error, info};
+use tracing::error;
 
 use crate::command::Command;
 
