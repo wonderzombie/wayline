@@ -235,9 +235,15 @@ impl Wayline {
             let dice = &t.dice;
             let (roll, result) = api::roll_on(t, dice);
             if let Some(entry) = result {
-                self.update_scrollback(format!("{} -> ({}): rolled: {}", table_name, roll, entry.name));
+                self.update_scrollback(format!(
+                    "{} -> ({}): rolled: {}",
+                    table_name, roll, entry.name
+                ));
             } else {
-                self.update_scrollback(format!("{} -> ({}): no matching entry found.", table_name, roll));
+                self.update_scrollback(format!(
+                    "{} -> ({}): no matching entry found.",
+                    table_name, roll
+                ));
             }
         } else {
             self.update_scrollback(format!("Table '{}' not found.", table_name));

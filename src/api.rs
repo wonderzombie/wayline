@@ -2,8 +2,8 @@ use crate::table;
 use rand;
 
 pub fn parse_tables(toml_str: &str) -> Result<Vec<table::Table>, toml::de::Error> {
-  let list: table::TableList = toml::from_str(toml_str)?;
-  Ok(list.table)
+    let list: table::TableList = toml::from_str(toml_str)?;
+    Ok(list.table)
 }
 
 pub fn roll(dice: &str) -> Option<u32> {
