@@ -4,5 +4,31 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Wayline (debug)",
+				"type": "lldb",
+				"request": "launch",
+				"cargo": {
+					"args": [
+						"build",
+						"--bin",
+						"wayline",
+						"--manifest-path",
+						"${workspaceFolder}/Cargo.toml"
+					],
+					"filter": {
+						"name": "wayline",
+						"kind": "bin"
+					}
+				},
+				"args": [],
+				"cwd": "${workspaceFolder}",
+				"stopOnEntry": false
+			}
+		]
+	}
 }
