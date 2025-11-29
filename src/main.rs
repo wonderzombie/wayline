@@ -133,13 +133,19 @@ impl Wayline {
     /// If no table is loaded, do nothing.
     /// If multiple tables are loaded but none is selected, list table names.
     /// If one table is selected, list its entries.
-    fn on_list_command(&mut self) {
+    fn on_list_command(&mut self, it: Option<String>) {
         if self.tables.is_empty() {
             self.update_scrollback("No tables loaded.");
             return;
         }
 
-        if let Some(table) = self.table() {
+        let maybe_table = if let Some(table_name) = it {
+            self.tables.get(&table_name)
+        } else {
+            self.table()
+        };
+
+        if let Some(table) = maybe_table {
             let mut lines: Vec<String> = vec![
                 format!("Table: {}", table.name),
                 format!("Dice: {}", table.dice),
@@ -193,14 +199,15 @@ impl Wayline {
                     self.update_scrollback(format!("Invalid dice notation: {}", dice_str));
                 }
             }
-            Command::List => self.on_list_command(),
+            Command::List(it) => self.on_list_command(it),
             Command::Time => self.on_time_command(),
             Command::Add(minutes) => self.add_minutes(minutes),
             Command::Help => {
                 self.update_scrollback("Available commands:");
-                self.update_scrollback("- roll : Roll on the loaded table");
+                self.update_scrollback("- use <table name> : Select a table as current");
+                self.update_scrollback("- roll [table name] : Roll on the current table or a table with [table name]");
                 self.update_scrollback("- dice <notation> : Roll custom dice (e.g., '2d6')");
-                self.update_scrollback("- list : List the loaded table entries");
+                self.update_scrollback("- list [table name] : List the current table entries, or all tables if current table is unset");
                 self.update_scrollback("- time : Show current in-game time");
                 self.update_scrollback("- add <minutes> : Add minutes to in-game time");
                 self.update_scrollback("- help : Show this help message");

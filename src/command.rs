@@ -2,7 +2,7 @@
 pub enum Command {
     RollTable(Option<String>),
     RollDice(String),
-    List,
+    List(Option<String>),
     Time,
     Add(u32), // in minutes
     Use(String),
@@ -25,14 +25,19 @@ pub fn parse_command(input: &str) -> Command {
                 Command::RollTable(Some(table_name))
             }
         }
-        "list" => Command::List,
+        "list" => if parts.len() == 1 {
+            Command::List(None)
+        } else {
+            Command::List(Some(parts[1..].join(" ").to_lowercase()))
+        }
         "time" => Command::Time,
         "use" => {
-            if parts.len() >= 2 {
-                let table_name = parts[1..].join(" ").to_lowercase();
-                return Command::Use(table_name);
-            }
-            Command::Unknown(input.to_string())
+            let table_name = if parts.len() >= 2 {
+                parts[1..].join(" ").to_lowercase()
+            } else {
+                "".into()
+            };
+            Command::Use(table_name)
         }
         "dice" => {
             if parts.len() == 2 {
@@ -59,7 +64,7 @@ mod tests {
     fn test_parse_command() {
         assert_eq!(parse_command("roll"), Command::RollTable(None));
         assert_eq!(parse_command("roll monsters"), Command::RollTable(Some("monsters".to_string())));
-        assert_eq!(parse_command("list"), Command::List);
+        assert_eq!(parse_command("list"), Command::List(None));
         assert_eq!(parse_command("time"), Command::Time);
         assert_eq!(parse_command("use treasures"), Command::Use("treasures".to_string()));
         assert_eq!(parse_command("dice 2d6"), Command::RollDice("2d6".to_string()));
