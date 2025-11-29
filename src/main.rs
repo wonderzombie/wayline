@@ -168,11 +168,12 @@ impl Wayline {
             }
         } else {
             self.update_scrollback("Loaded tables:");
-            let lines: Vec<String> = self
+            let mut lines: Vec<String> = self
                 .tables
                 .keys()
                 .map(|name| format!("- {}", name))
                 .collect();
+            lines.sort();
             for line in lines {
                 self.update_scrollback(line);
             }
