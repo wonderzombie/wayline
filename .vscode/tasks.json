@@ -3,18 +3,22 @@
 	"tasks": [
     {
       "type": "cargo",
-      "command": "run",
-      "args": [
-        "--package",
-        "wayline",
-        "--bin",
-        "wayline"
-      ],
+      "command": "runwl",
       "problemMatcher": [
         "$rustc"
       ],
       "group": "build",
       "label": "rust: run wayline"
+    },
+    {
+      "type": "cargo",
+      "command": "clippywl",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": "build",
+      "label": "rust: run clippy"
     }
+
   ]
 }
