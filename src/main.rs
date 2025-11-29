@@ -143,29 +143,25 @@ impl Wayline {
     /// If no table is loaded, do nothing.
     /// If multiple tables are loaded but none is selected, list table names.
     /// If one table is selected, list its entries.
+    /// If the user passed `all`, list all tables whether or not any table is selected.
     fn on_list_command(&mut self, it: Option<String>) {
         if self.tables.is_empty() {
             self.update_scrollback("No tables loaded.");
             return;
         }
 
-        let maybe_table = if let Some(table_name) = it {
-            self.tables.get(&table_name)
+        let maybe_table = if let Some(ref table_name) = it {
+            if table_name == "all" {
+                None
+            } else {
+                self.tables.get(table_name)
+            }
         } else {
             self.table()
         };
 
-        if let Some(table) = maybe_table {
-            let mut lines: Vec<String> = vec![
-                format!("Table: {}", table.name),
-                format!("Dice: {}", table.dice),
-            ];
-            for entry in &table.rows {
-                lines.push(format!("- {}: {:?}", entry.name, entry.numbers));
-            }
-            for line in lines {
-                self.update_scrollback(line);
-            }
+        if let Some(target) = maybe_table {
+            self.update_scrollbacks(get_table_info(target));
         } else {
             self.update_scrollback("Loaded tables:");
             let mut lines: Vec<String> = self
@@ -174,9 +170,7 @@ impl Wayline {
                 .map(|name| format!("- {}", name))
                 .collect();
             lines.sort();
-            for line in lines {
-                self.update_scrollback(line);
-            }
+            self.update_scrollbacks(lines);
         }
     }
 
@@ -282,6 +276,27 @@ impl Wayline {
         let new_content = self.scrollback.join("\n");
         self.content = Content::with_text(&new_content);
     }
+
+    fn update_scrollbacks<I, S>(&mut self, new_lines: I)
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        for line in new_lines {
+            self.update_scrollback(line);
+        }
+    }
+}
+
+fn get_table_info(table: &table::Table) -> Vec<String> {
+    let mut lines: Vec<String> = vec![
+        format!("Table: {}", table.name),
+        format!("Dice: {}", table.dice),
+    ];
+    for entry in &table.rows {
+        lines.push(format!("- {}: {:?}", entry.name, entry.numbers));
+    }
+    lines
 }
 
 pub fn main() {
