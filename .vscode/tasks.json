@@ -3,7 +3,7 @@
 	"tasks": [
     {
       "type": "cargo",
-      "command": "runwl",
+      "command": "runw",
       "problemMatcher": [
         "$rustc"
       ],
@@ -12,13 +12,21 @@
     },
     {
       "type": "cargo",
-      "command": "clippywl",
+      "command": "clippyw",
       "problemMatcher": [
         "$rustc"
       ],
       "group": "build",
       "label": "rust: run clippy"
+    },
+    {
+      "type": "cargo",
+      "command": "lcov",
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": "build",
+      "label": "rust: generate coverage (lcov)"
     }
-
   ]
 }

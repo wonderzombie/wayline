@@ -1,3 +1,4 @@
 [alias]
-runwl = ["run", "--package", "wayline", "--bin", "wayline"]
-clippywl = ["clippy", "--package", "wayline", "--bin", "wayline"]
+runw = ["run", "--package", "wayline", "--bin", "wayline"]
+clippyw = ["clippy", "--package", "wayline", "--bin", "wayline"]
+lcov = ["llvm-cov", "--lcov", "--output-path", "lcov.info"]
