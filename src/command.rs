@@ -11,7 +11,7 @@ pub enum Command {
 }
 
 pub fn parse_command(input: &str) -> Command {
-    let parts: Vec<&str> = input.trim().split_whitespace().collect();
+    let parts: Vec<&str> = input.split_whitespace().collect();
     if parts.is_empty() {
         return Command::Unknown(input.to_string());
     }
@@ -41,11 +41,10 @@ pub fn parse_command(input: &str) -> Command {
             Command::Unknown(input.to_string())
         }
         "add" => {
-            if parts.len() == 2 {
-                if let Ok(minutes) = parts[1].parse::<u32>() {
+            if parts.len() == 2
+                && let Ok(minutes) = parts[1].parse::<u32>() {
                     return Command::Add(minutes);
                 }
-            }
             Command::Unknown(input.to_string())
         }
         "help" => Command::Help,
