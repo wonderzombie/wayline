@@ -12,7 +12,7 @@ use crate::command::Command;
 
 const MAIN_INPUT_ID: &str = "wayline-main-textinput";
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Wayline {
     // UI state
     scrollback: Vec<String>,
@@ -25,19 +25,6 @@ pub struct Wayline {
 
     // In-game time tracking
     current_time_minutes: u32,
-}
-
-impl Default for Wayline {
-    fn default() -> Self {
-        Self {
-            scrollback: Vec::new(),
-            input: String::new(),
-            content: Content::new(),
-            current_table: None,
-            tables: HashMap::new(),
-            current_time_minutes: 0,
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
