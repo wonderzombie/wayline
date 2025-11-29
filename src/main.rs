@@ -5,12 +5,14 @@ mod table;
 use std::collections::HashMap;
 
 use iced::widget::{column, text_editor, text_editor::Content, text_input};
-use iced::{Element, color};
+use iced::{Element, Task, color};
 use tracing::error;
 
 use crate::command::Command;
 
-#[derive(Debug, Default)]
+const MAIN_INPUT_ID: &str = "wayline-main-textinput";
+
+#[derive(Debug)]
 pub struct Wayline {
     // UI state
     scrollback: Vec<String>,
@@ -25,6 +27,19 @@ pub struct Wayline {
     current_time_minutes: u32,
 }
 
+impl Default for Wayline {
+    fn default() -> Self {
+        Self {
+            scrollback: Vec::new(),
+            input: String::new(),
+            content: Content::new(),
+            current_table: None,
+            tables: HashMap::new(),
+            current_time_minutes: 0,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum Message {
     Noop,
@@ -35,6 +50,12 @@ pub enum Message {
 }
 
 impl Wayline {
+    fn new() -> (Self, Task<Message>) {
+        let w: Wayline = Self::default();
+        let task = text_input::focus(MAIN_INPUT_ID);
+        (w, task)
+    }
+
     pub fn subscription(&self) -> iced::Subscription<Message> {
         iced::window::events().map(|(_, event)| match event {
             iced::window::Event::Opened { .. } => Message::WindowOpened,
@@ -90,6 +111,7 @@ impl Wayline {
                 .height(iced::Length::FillPortion(9)),
             // Input area
             text_input("enter command", &self.input)
+                .id(MAIN_INPUT_ID)
                 .padding(10)
                 .size(14)
                 .on_input(Message::ContentChanged)
@@ -109,6 +131,7 @@ impl Wayline {
             }
             Message::WindowOpened => {
                 self.update_scrollback("Wayline window opened.");
+
                 if let Some(config) = self.read_config("tables.toml") {
                     self.load_all(&config);
                     self.update_scrollback(format!(
@@ -205,7 +228,9 @@ impl Wayline {
             Command::Help => {
                 self.update_scrollback("Available commands:");
                 self.update_scrollback("- use <table name> : Select a table as current");
-                self.update_scrollback("- roll [table name] : Roll on the current table or a table with [table name]");
+                self.update_scrollback(
+                    "- roll [table name] : Roll on the current table or a table with [table name]",
+                );
                 self.update_scrollback("- dice <notation> : Roll custom dice (e.g., '2d6')");
                 self.update_scrollback("- list [table name] : List the current table entries, or all tables if current table is unset");
                 self.update_scrollback("- time : Show current in-game time");
@@ -269,14 +294,13 @@ impl Wayline {
         let new_content = self.scrollback.join("\n");
         self.content = Content::with_text(&new_content);
     }
-
 }
 
 pub fn main() {
     iced::application("wayline", Wayline::update, Wayline::view)
         .theme(theme)
         .subscription(Wayline::subscription)
-        .run()
+        .run_with(Wayline::new)
         .expect("unable to run application")
 }
 
